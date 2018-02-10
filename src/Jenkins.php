@@ -641,6 +641,39 @@ class Jenkins
     }
 
     /**
+     * @param Jenkins\Job $job
+     * @param Jenkins\Build $build
+     *
+     * @throws \RuntimeException
+     */
+    public function stopBuild(Jenkins\Job $job, Jenkins\Build $build)
+    {
+        $url = sprintf(
+            '%s/job/%s/%s/stop',
+            $this->baseUrl,
+            $job->getName(),
+            $build->getNumber()
+        );
+
+        $curl = curl_init($url);
+        curl_setopt($curl, \CURLOPT_POST, 1);
+
+        $headers = array();
+
+        if ($this->areCrumbsEnabled()) {
+            $headers[] = $this->getCrumbHeader();
+        }
+
+        curl_setopt($curl, \CURLOPT_HTTPHEADER, $headers);
+        curl_exec($curl);
+
+        $this->validateCurl(
+            $curl,
+            sprintf('Error during stopping build %s #%s', $job->getName(), $build->getNumber())
+        );
+    }
+
+    /**
      * @param Jenkins\JobQueue $queue
      *
      * @throws \RuntimeException
