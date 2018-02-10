@@ -674,6 +674,48 @@ class Jenkins
     }
 
     /**
+     * @param Jenkins\Job $job
+     * @param Jenkins\Build $build
+     *
+     * @throws \RuntimeException
+     */
+    public function setBuildDescription(Jenkins\Job $job, Jenkins\Build $build, $description)
+    {
+        $url = sprintf(
+            '%s/job/%s/%s/submitDescription',
+            $this->baseUrl,
+            $job->getName(),
+            $build->getNumber()
+        );
+        $post_fields = [
+            'description' => $description,
+            'Submit' => 'Submit'
+        ];
+
+        $curl = curl_init($url);
+        curl_setopt($curl, \CURLOPT_POST, 1);
+        curl_setopt(
+            $curl,
+            \CURLOPT_POSTFIELDS,
+            http_build_query($post_fields)
+        );
+
+        $headers = array();
+
+        if ($this->areCrumbsEnabled()) {
+            $headers[] = $this->getCrumbHeader();
+        }
+
+        curl_setopt($curl, \CURLOPT_HTTPHEADER, $headers);
+        curl_exec($curl);
+
+        $this->validateCurl(
+            $curl,
+            sprintf('Error during setting build description %s #%s', $job->getName(), $build->getNumber())
+        );
+    }
+
+    /**
      * @param Jenkins\JobQueue $queue
      *
      * @throws \RuntimeException
